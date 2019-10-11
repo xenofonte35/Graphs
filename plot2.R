@@ -1,0 +1,13 @@
+library(readr)
+household_power_consumption <- read_delim("~/R/Exploratory_Data/household_power_consumption.txt", 
+                                          ";", escape_double = FALSE, trim_ws = TRUE)
+View(household_power_consumption)
+start_date<-as.Date("01/02/2007","%d,%m,%Y")
+end_date<-as.Date("02/02/2007","%d,%m,%Y")
+all_dates<-as.Date(household_power_consumption$Date,"%d,%m,%Y")
+subsetData<-subset(household_power_consumption,household_power_consumption$Date=="2/2/2007"|household_power_consumption$Date=="1/2/2007")
+Day_Time<-strptime(paste(subsetData$Date,subsetData$Time, sep=""),"%d/%m/%Y %H:%M:%S")
+GAP<-as.numeric(subsetData$Global_active_power)
+png(filename = "plot2.png", width = 480,height = 480)
+plot(Day_Time,GAP,type="l",xlab = "",ylab = "Global Active Power (Kilowastts)")
+dev.off()
