@@ -1,0 +1,133 @@
+---
+title: "Die Filmindustrie"
+author: "GRG"
+date: '2023-04-10'
+output: 
+  html_document:
+    theme: yeti
+    toc: true
+    toc_float: true 
+    
+---
+
+# Einführung
+
+Dieses Dokument befasst sich mit der Datai bezogen auf die Filmindusrie. Wir wollen folgende Fragen beantworten:
+
+  1. Wie viel Filme wurden von 2007 bis 2011 gedreht?
+  2. Was für Filme wurden gedreht ?
+  3. Wie hat das Publikum die verschiedene Filme bewertet und wie teuer waren sie?
+  4. Anhand ein Histogramm, wie viel kostet einen Film zu drehen
+  5. Was zeigt eine Boxplot Grafik dazu?
+  6. Wie sieht es aus mit der Zahl der Filmen und Budget wenn wir für den jeweiligen Genre eine Histogramm machen?
+  7.Was könnten schluss folgern aus der ganzen Analyse?
+
+![Die Filmindustrie](C:/Users/ACER/OneDrive/Documentos/Film.png){width=60%}
+
+Quelle: <https://www.udemy.com/course/tutorial-r/learn/lecture/17222298#overview>
+
+
+```{r include=FALSE}
+library(readr)
+PELIS_2 <- read_csv("E:/Users/Investigador/iCloudDrive/R/PELIS_2.csv")
+colSums(is.na(PELIS_2))
+PELIS_2<-na.omit(PELIS_2)
+colSums(is.na(PELIS_2))
+head(PELIS_2)
+tail(PELIS_2)
+names(PELIS_2)
+```
+
+
+```{r include=FALSE}
+library(broom)
+library(knitr)
+factor(PELIS_2$Jahr)
+PELIS_2$Jahr<-factor(PELIS_2$Jahr)
+```
+
+
+```{r include=FALSE}
+summary(PELIS_2$Jahr)
+```
+
+
+```{r include=FALSE}
+a<-table(PELIS_2$Genre,PELIS_2$Jahr)
+a
+```
+
+```{r echo=FALSE}
+kable(a,caption = "Zusammenfassung",col.names = c("2007","2008","2009","2010","2011"))
+```
+
+Anhand der Datai koennen wir die Antwort auf die zwei ersten Fragen finden
+
+## Kosten und Bewertung
+
+```{r echo=FALSE}
+library(ggplot2)
+ggplot(data=PELIS_2,aes(x=Kritik,y=Bewertung, color=Genre, size=Budget))+geom_point()
+p<-ggplot(data=PELIS_2,aes(x=Kritik,y=Bewertung, color=Genre, size=Budget))
+p+geom_point(aes(size=Kritik))
+```
+
+Die Grafik zeigt, dass je besser die Bewertung desto hoeher werden die Kritikpunkte. Ausserdem, waren Action- und Abenteuterfilme die teuersten
+
+
+```{r echo=FALSE}
+p+geom_point(aes(x=Budget))+xlab("Budget (Millionen USD)")
+```
+
+Setzen wir das Budget auf die x-Achse und schauen genauer welche Filme am teuersten waren.
+
+## Histogram
+
+```{r echo=FALSE}
+s<-ggplot(data=PELIS_2, aes(x=Budget))
+s+geom_histogram(binwidth = 10, fill="green")
+```
+
+Es ist eindeutig, dass die meisten Filme mit einem Budget innerhalb der 100 Millionen USD gedreht wurden
+
+```{r echo=FALSE}
+s+geom_histogram(binwidth = 10, aes(fill=Genre),color="black")
+```
+
+Die meist gedrehten Projekte sind Komödien, Dramen und Actionfilme und kosten gegen 30 Millionen USD
+
+## Boxplot
+
+```{r echo=FALSE}
+u2<-ggplot(data = PELIS_2, aes(x=Kritik,y=Bewertung,color=Genre))
+u2+geom_jitter()+geom_boxplot(size=1.2,alpha=0.5)
+```
+Die Boxplot Grafik zeigt, dass die am besten bewerteten Filme, welchen relativ hohe Kritikpunkte haben, Dramen- und Abenteuerfilme sind
+
+## Histogram und Genre
+
+```{r echo=FALSE}
+v<-ggplot(data=PELIS_2,aes(Budget))
+v+geom_histogram(bindwidth=10,aes(fill=Genre),color="black")+facet_grid(Genre~.,scales = "free")
+```
+
+Diese Grafik zeigt, dass die meisten und billigsten Filme Komödien sind und die teuersten und seltensten Abenteuer und Action.
+
+## Zusammenfassung
+
+```{r echo=FALSE}
+g<-ggplot(data=PELIS_2,aes(x=Budget))
+h<-g+geom_histogram(bindwidth=10,aes(fill=Genre),color="black")
+h+xlab("Budget")+ylab("Filmenzahl")+ggtitle("Filmenbudget")+theme(axis.title.x =  element_text(color="DarkGreen",size=20),
+                                                                  axis.title.y = element_text(color="DarkGreen",size=20),
+                                                                  axis.text.x = element_text(size = 15),
+                                                                  axis.text.y = element_text(size = 15),
+                                                                  legend.title = element_text(size=20),
+                                                                  legend.position = c(0.98,0.98),
+                                                                  legend.justification = c(1,1),
+                                                                  plot.title = element_text(color = "DarkBlue",size=25,hjust = 0.5))
+
+```
+
+Diese Grafik zeigt die komplette Information mit den Namen in den jeweiligen Achsen und Genre. Das Ergebniss der Analyse zeigt, dass die meisten Filme werden mit einem Budget von 30 Millionen USD gedreht wurden und handelte sich um Kömendien und Drama.
+
