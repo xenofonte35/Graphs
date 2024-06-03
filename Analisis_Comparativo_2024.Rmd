@@ -1,0 +1,328 @@
+---
+title: "Comparativa_Galton_24"
+author: "Gerardo Reyes"
+date: "2024-05-16"
+output: 
+  html_document:
+    theme:  darkly
+    toc: true
+    toc.float: true
+bibliography: references.bib
+---
+
+# Análisis comparativo: estaturas
+
+![Francis Galton](Desktop/Captura%20de%20Pantalla%202024-05-15%20a%20la(s)%2018.13.58.png)
+
+## Introducción
+
+#### El eugenesista Francis Galton publicó en 1886 un artículo que titulo "Regression, Towards Mediocrity in Hederitary Stature". Entre otras cosas, llego a la conclusión de que hay una tendencia a la media en las estaturas de los seres humanos. De modo que los hijos de una pareja de altos, serán en promedio mas bajos que sus padres y vicecersa; una pareja de bajitos, tendrá hijos más altos que ellos[@galton1886]. Las técnicas estadísticas utilizadas en este estudio son estándares e incluyen gráfico exploratorios de datos, modelos de regresión y gráficos residuales disponibles en softwares gratuitos[@sánchezvillena2019]. En este caso se uso el software R y RStudio[@pradhan2021].
+
+#### La base de datos de Galton tiene 890 observaciones. 430 son hijas y 460 varones. Este escrito está dividido en tres secciones: en la primera analizamos los datos de Galton originales a la luz de la estadistica básica. En la segunda, datos recabados en 2023 sobre las estaturas de familias viviendo en Salamanca Guanajuato. En el tercer acápite, presentamos dados de la misma localidad, pero recabados en 2024 \## Datos originales de Galton
+
+## Datos originales
+
+```{r include=FALSE}
+library(ggplot2)
+library(knitr)
+library(broom)
+library(statsr)
+library(readr)
+library(dplyr)
+library(tidyverse)
+library(psych)
+library(corrplot)
+library(GGally)
+Galton <- read_csv("~/Library/Mobile Documents/com~apple~CloudDocs/R/Galton.csv")
+head(Galton,n=10)
+```
+
+#### La tabla tiene 6 variables, con 890 observaciones que recogen datos de 204 familias.
+
+```{r, echo=TRUE}
+hist(Galton$Father)
+abline(v=69,  col="green",lwd=4)
+abline(v=mean(Galton$Father),col="red")
+abline(v=median(Galton$Father),col="blue")
+```
+
+#### Se advierte que el promedio de la estatura en pulgadas es de 69.24, mientras que la mediana es de 69. El histograma apunta hacia una kurtosis de 0.55 que indica unca forma leptocuritca, con un sesgo a la izquierda de 0.15
+
+```{r, echo=TRUE}
+library(lattice)
+xyplot(Father~Height|Gender,data=Galton)
+```
+
+#### La gráfica nos presenta la estatura del padre en relación a la de los hijos. A la izquierda aparecen las hijas mientras que a la derecha los hijos. En los datos originales F representa "femenine" mientras que M, " masculine. Se puede observar que padres con una estatura de entre 65 y 65 pulgadas, tienen hijas que miden entre 60 y 65 pulgadas e hijos de 69 y 74 pulgadas.
+
+
+#### El diagrama de caja advierte que la estatura de los hijos tiende a ser menor a la de los padres y mayor a la de las madres
+
+### Panel: datos originales
+
+```{r, echo=TRUE}
+colnames(Galton)<-c("Familia","Padre","Madre","Genero","Estatura","Hijos")
+names(Galton)
+head(Galton,n=10)
+Galton01<-Galton %>%
+  dplyr::select(Padre,Madre,Estatura) %>%
+  group_by(Padre)
+pairs.panels(Galton01)
+```
+
+#### El panel muestra que la correlación entre la estatura de los padres es de 0.07, lo cual es casi inexistente, mientras que la más significativa es la del padre vs los hijos con 0.28, seguida por la madre vs los hijos con 0.20.
+
+### Modelo de regresión múltiple para datos originales
+
+```{r, echo=TRUE}
+e<-lm(Estatura~Padre+Madre,data=Galton)
+summary(e)
+```
+
+$$ Ye= a+b1x+b2x $$
+
+#### Una regresion multiple muestra que por cada pulgada que aumente la estatura del padre, la del hijo lo hará en 0.38 pulgadas, mientras que por cada pulgada que aumente la estatura de la madre, la del hijo se incrementará en 0.28 pulgadas. Por tanto, podemos concluir que el padre influye más en la estatura de los hijos que la madre. La R2 es 0.10
+
+### Gráfica de residuales: datos originales
+
+```{r, echo=TRUE}
+plot(resid(e))
+abline(h=0, col="red", lwd=2)
+```
+
+```{r, echo=TRUE}
+inference(y = Estatura, x = Genero, data = Galton, statistic = "mean", type = "ci", 
+          method = "theoretical", order = c("M","F"))
+```
+
+#### Se estima que la diferencia de estaturas entre los hijos varones y mujeres es de entre 4.781 y 5.442 pulgadas con un nivel de confianza del 95%. El promedio de estatura de las mujeres es de 64.11 pulgadas mientras que el de los hombres de 69.22
+
+#### A continuación exploramos la base de datos recabada con familias residentes en Salamanca Guanajuato en Mayo de 2023
+
+```{r, echo=TRUE}
+v<-ggplot(data=Galton, aes (x=Estatura,fill=Genero))+geom_histogram(binwidth = 1,color="black")
+v+ggtitle("Histograma")
+```
+
+#### El histograma muestra una combinación de estaturas entre hijos e hijas. Claramente se aprecia que los mas altos son varones. La mujer más alta alcanza las 71 pulgadas, mientras que el hijo varon mas bajito alcanza 60 pulgadas.
+
+## Datos de Familias de Salamanca en Mayo de 2023
+
+```{r, echo=TRUE}
+GaltonMayo23 <- read_csv("Library/Mobile Documents/com~apple~CloudDocs/R/GaltonMayo23.csv")
+summary(GaltonMayo23)
+```
+
+#### La base de datos tiene 350 observaciones. La estatura promedio de las madres es de 1.65 cm; mientras que de los padres es de 1.77 cm
+
+
+#### En los datos de mayo de 2023 hay valores extremos que sesgan la gráfica de caja, pero se advierte una tendencia hacia la media como lo apunta Galton
+
+### Panel: Datos de Mayo de 2023
+
+```{r, echo=TRUE}
+Galton02<-GaltonMayo23 %>%
+  dplyr::select(Padre,Madre,Estatura) %>%
+  group_by(Padre)
+library(readr)
+pairs.panels(Galton02)
+```
+
+#### El panel de esta base de datos señala que hay una correlación de 0.33 entre las estaturas de los padres y las estaturas de las madres. Entre las estaturas de los padres y de los hijos es de 0.18. La correlación entre las madres y los hijos es de 0.39. Se concluye que las madres influyen más en la estatura de los hijos que los padres.
+
+### Modelo de regresión múltiple: Mayo de 2023
+
+```{r, echo=TRUE}
+e1<-lm(Estatura~Padre+Madre,data=Galton02)
+summary(e1)
+```
+
+$$ Ye= a+b1x+b2x $$
+
+#### Una regresión multiple señala que por cada centimetro que aumente la estatura del padre, la del hijo se incrementa en 0.08 cm en promedio. Por su parte, por cada pulgada que la estatura de la madre se incremente, la de los hijos aumentará en 0.50 cm en promedio. R2 es de 0.15.
+
+### Grafico de residuales: Mayo de 2023
+
+```{r, echo=TRUE}
+plot(resid(e1))
+abline(h=0, col="red", lwd= 3)
+
+```
+
+```{r, echo=TRUE}
+inference(y = Estatura, x = Genero, data = GaltonMayo23, statistic = "mean", type = "ci", 
+          method = "theoretical", order = c("H","M"))
+```
+
+#### El promedio de la estatura de los hijos varones es de 1.74 cm, mientras que la de las hijas es de 1.66. Entre los dos hay una diferencia con un nivel de confianza del 95% de entre 0.054 y 0.099 cm
+
+```{r, echo=TRUE}
+v<-ggplot(data=GaltonMayo23, aes (x=Estatura,fill=Genero))+geom_histogram(color="black")
+v+ggtitle("Histograma con datos de clase")
+```
+
+####. Este histograma refleja que los hijos varones representados por el color rosa, son los mas altos. Aunque se perciben mujeres muy altas y un hombre muy bajito. Probablemente, la base de datos recogió estaturas de hijos en la niñez.
+
+## Datos de Agosto de 2023
+
+```{r, echo=TRUE}
+GaltonAgo23 <- read_csv("Library/Mobile Documents/com~apple~CloudDocs/GaltonAgo23.csv")
+summary(GaltonAgo23)
+```
+
+#### En la base de datos de agosto de 2023, se recolectaron 493 observaciones.Se contabilizaron 239 hijos y 254 hijas. Se registraron las estaturas de 220 familias. La estatura del padre es de 1.77 en promedio, mientras que de la madre es de 1.64 cm
+
+### Panel: Datos agosto de 2023
+
+```{r, echo=TRUE}
+Galton05<-GaltonAgo23 %>%
+  dplyr::select(Padre,Madre,Estatura) %>%
+  group_by(Padre)
+pairs.panels(Galton05)
+```
+
+#### En esta base de datos la correlacion entre el padre y la madre es de 0.35; el padre y el hijo: 0.10, mientras que la de la madre y del hijo es de 0.30. Se reafirma la inflencia de la madre en la estatura de los hijos por encima de la del padre
+
+
+#### Los datos de agosto de 2023 son consistentes nuevamente con los hallazgos de Galton
+
+### Modelo de regresión múltiple: agosto 2023
+
+```{r, echo=TRUE}
+e5<-lm(Estatura~Padre+Madre,data=Galton05)
+summary(e5)
+```
+
+$$ Ye=a+b1x+b2x $$ \#### Una correlación múltiple selaña que por cada centimetro de estatura que aumente la madre, la del hijo lo hará en 0.50, mientra que por cada centímetro que aumente la estatura del padre la del hijo disminuirá en -0.01 cm en promedio. Es decir, el padre no determina la estatura de los hijos. R2 de 0.09
+
+### Gráfico de residuales: agosto 2023
+
+```{r, echo=TRUE}
+plot(resid(e5))
+abline(h=0, col="red", lwd=2)
+```
+
+```{r, echo=TRUE}
+j<-ggplot(data=GaltonAgo23, aes (x=Estatura,fill=Genero))+geom_histogram(color="black")
+j+ggtitle("Histograma con datos de clase: agosto 2023")
+```
+
+#### En esta base de tados se identifican niños, pequeños de estattura, de entre 1 m y 1.25 m. También se percibe la presencia de mujeres muy altas.
+
+## Datos de Mayo de 2024
+
+#### Se elaboró una encuesta hecha por los estudiantes de taller de investigación en el periodo académico febrero-junio de 2024, obteniendo los siguientes resultados:
+
+. se juntaron 643 observaciones
+
+| Conc.    | Prom   | min  | max  | sd    | rango | kurto |
+|----------|--------|------|------|-------|-------|-------|
+| Familia  | 131.59 | 1    | 266  | 74.31 | 265   | -1.07 |
+| Padre    | 1.74   | 1.58 | 1.99 | 0.08  | 0.41  | 0.25  |
+| Madre    | 1.63   | 1.48 | 1.85 | 0.06  | 0.37  | 0.56  |
+| Genero   | 1.51   | 1    | 2    | 0.5   | 1     | -2.0  |
+| Estatura | 1.67   | 0.5  | 1.98 | 0.13  | 1.48  | 15.14 |
+| Hijos    | 2.78   | 1    | 7    | 1.08  | 6     | 1.89  |
+
+: Generales
+
+```{r, echo=TRUE}
+library(readxl)
+GALTON_MAY24 <- read_excel("Library/Mobile Documents/com~apple~CloudDocs/R/GALTON_MAY24.xlsx", 
+col_types = c("numeric", "numeric", "numeric", "text", "numeric", "numeric"))
+GALTON24<-GALTON_MAY24
+summary(GALTON24)
+```
+
+#### En la base de datos de 2024, la estatura promedio del padre es de 174 y de la madre 1.62
+
+```{r, echo=TRUE}
+library(lattice)
+xyplot(Padre~Estatura|Genero,data=GALTON24)
+```
+
+#### Esta gráfica muestra claramente los outliers o valores extremos que seguramente representa estatura de [niñ\@s](mailto:niñ@s){.email}
+
+```{r, echo=TRUE}
+ggplot(data = GALTON24, aes(x = Hijos , y = Estatura)) +
+  geom_jitter()+
+  geom_smooth(method = "lm")+
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  xlab("Numero de hijos") +
+  ylab("Estatura")
+```
+
+En esta gráfica podemos percibir a cinco niños de un metro y uno de medio metro entre los padres que tienen dos hijos
+
+
+#### Una vez más el diagrama de caja es consistente con el hallazgo de Galton
+
+```{r,echo=TRUE}
+GALTTON_01<-GALTON24 %>%
+  dplyr::select(Padre,Madre,Estatura) %>%
+  group_by(Padre)
+pairs.panels(GALTTON_01)
+```
+
+#### En esta gráfica podemos percibir nuevamente una correlación significativa entre el padre y la madre de 0.26. Le sigue una correlación de 0.15 entre padres e hijos y de 0.14 entre madres e hijos
+
+### Modelo de regresión múltiple: mayo de 2024
+
+```{r, echo=TRUE}
+h<-lm(Estatura~Padre+Madre,data=GALTON24)
+summary(h)
+```
+
+$$ Ye=a+b1x+b2x $$
+
+#### Una correlación múltiple en donde la estatura de los hijos es la variable dependiente y la estatura de los padres y de la madres, las variables independientes, señala que por cada centímetro que aumente la estatura del padre, la del hijo lo hará en 0.21084 m, mientras que por cada centímetro que aumente la estatura de la madre, la del hijo lo hará en 0.2142 m en promedio.
+
+### Gráfico de residuales: mayo de 2024
+
+```{r, echo=TRUE}
+plot(resid(h))
+abline(h=0, col="red", lwd=5)
+```
+
+#### la gráfica de residuales no dice que se trata de un buen modelo, con algunos puntos extremos que ya hemos comentado.
+
+```{r, echo=TRUE}
+inference(y = Estatura, x = Genero, data = Galton, statistic = "mean", type = "ci", 
+          method = "theoretical", order = c("M","F"))
+```
+
+#### El promedio de la estatura de los hijos es de 1.714 cm con 318 observaciones. El promedio de la estatura de la hijas es de 1.62 cm con 325 observaciones. La diferencia entre las dos estaturas con un nivel de confianza del 95% es de entr 0.0659 y 0.1038 m.
+
+```{r, echo=TRUE}
+z<-ggplot(data=GALTON24, aes (x=Estatura,fill=Genero))+geom_histogram(binwidth = 0.05,color="black")
+z+ggtitle("Histograma Mayo 2024")
+```
+
+#### En este histograma, se aprecia que los valores extremos sesgan el histograma a la izquierda. El hijo de 1 m es varón, mientras que la de 0.5 es una niña. Se aprecia que conforme sube la estatura la participación de las mujeres disminuye. La frecuencia más alta de cerca de 1.7 tiene una participación del 50% y 50%.
+
+## Conclusiones
+
+#### Se pudieron constatar los siguiente resultados:
+
+|                      Correlaciones | Pearson |
+|-----------------------------------:|:--------|
+| Datos Originales de Francis Galton |         |
+|                     Padre vs Madre | 0.07    |
+|                  Padre vs Estatura | 0.28    |
+|                     Madre vs Madre | 0.20    |
+|                Datos: Mayo de 2023 |         |
+|                     Padre vs Madre | 0.33    |
+|                  Padre vs Estatura | 0.18    |
+|                     Madre vs Madre | 0.39    |
+|                 Datos: Agosto 2023 |         |
+|                     Padre vs Madre | 0.35    |
+|                  Padre vs Estatura | 0.10    |
+|                     Madre vs Madre | 0.30    |
+|                 Datos:Mayo de 2024 |         |
+|                     Padre vs Madre | 0.26    |
+|                  Padre vs Estatura | 0.15    |
+|                     Madre vs Madre | 0.14    |
+
+#### Los datos revelan dos diferencias importantes. Primero, que entre la población encuestada en Salamanca Guanajuato la correlación entre los padres y madre fue de 0.33, 0.35 y 0.26, mientras que en los datos de Galtos originales fue solo de 0.07, es decir inexistente. Segundo, que la estatura de la madre influye más en la estatura de los hijos en contraste con los datos orgininales de Galton, en donde es el padre el que determina con mayor puntaje la estatura de los hijos.
+
+## Referencias
